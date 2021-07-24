@@ -44,6 +44,7 @@ export default async function caxa({
   ),
   removeBuildDirectory = true,
   uncompressionMessage,
+  temporaryDirectory
 }: {
   input: string;
   output: string;
@@ -59,6 +60,7 @@ export default async function caxa({
   identifier?: string;
   removeBuildDirectory?: boolean;
   uncompressionMessage?: string;
+  temporaryDirectory?: boolean;
 }): Promise<void> {
   if (!(await fs.pathExists(input)) || !(await fs.lstat(input)).isDirectory())
     throw new Error(
@@ -181,7 +183,7 @@ export default async function caxa({
     await appendTarballOfBuildDirectoryToOutput();
     await fs.appendFile(
       output,
-      "\n" + JSON.stringify({ identifier, command, uncompressionMessage })
+      "\n" + JSON.stringify({ identifier, command, uncompressionMessage, temporaryDirectory })
     );
   }
 
@@ -247,6 +249,12 @@ if (require.main === module)
         "-m, --uncompression-message <message>",
         "[Advanced] A message to show when uncompressing, for example, ‘This may take a while to run the first time, please wait...’."
       )
+      .option(
+        "-t, --temporary-directory",
+        "[Advanced] Extract application to temporary OS space.",
+        true
+      )
+      .option("-T, --no-temporary-directory")
       .arguments("<command...>")
       .description("Package Node.js applications into executable binaries.", {
         command:
@@ -285,6 +293,7 @@ Examples:
             identifier,
             removeBuildDirectory,
             uncompressionMessage,
+            temporaryDirectory
           }: {
             input: string;
             output: string;
@@ -297,6 +306,7 @@ Examples:
             identifier?: string;
             removeBuildDirectory?: boolean;
             uncompressionMessage?: string;
+            temporaryDirectory?: boolean;
           }
         ) => {
           try {
@@ -313,6 +323,7 @@ Examples:
               identifier,
               removeBuildDirectory,
               uncompressionMessage,
+              temporaryDirectory
             });
           } catch (error) {
             console.error(error.message);

@@ -41,15 +41,24 @@ func main() {
 		Identifier           string   `json:"identifier"`
 		Command              []string `json:"command"`
 		UncompressionMessage string   `json:"uncompressionMessage"`
+		TemporaryDirectory   bool     `json:"temporaryDirectory"`
 	}
 	if err := json.Unmarshal(footerString, &footer); err != nil {
 		log.Fatalf("caxa stub: Failed to parse JSON in footer: %v", err)
 	}
 
+	var extractionDirectory string = os.TempDir()
+	if footer.TemporaryDirectory == false {
+		extractionDirectory, err = os.UserCacheDir()
+		if err != nil {
+			log.Fatalf("caxa stub: Failed to find user cache directory: %v", err)
+		}
+	}
+
 	var applicationDirectory string
 	for extractionAttempt := 0; true; extractionAttempt++ {
-		lock := path.Join(os.TempDir(), "caxa/locks", footer.Identifier, strconv.Itoa(extractionAttempt))
-		applicationDirectory = path.Join(os.TempDir(), "caxa/applications", footer.Identifier, strconv.Itoa(extractionAttempt))
+		lock := path.Join(extractionDirectory, "caxa/locks", footer.Identifier, strconv.Itoa(extractionAttempt))
+		applicationDirectory = path.Join(extractionDirectory, "caxa/applications", footer.Identifier, strconv.Itoa(extractionAttempt))
 		applicationDirectoryFileInfo, err := os.Stat(applicationDirectory)
 		if err != nil && !errors.Is(err, os.ErrNotExist) {
 			log.Fatalf("caxa stub: Failed to find information about the application directory: %v", err)
